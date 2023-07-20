@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+        <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+
+        <title>Historical Analysis</title>
+    </head>
+    <body>
+        <h1>Historical Price Analysis</h1>
+
+        <input type="hidden"  id="stock_data_id" value="{{ stock_data }}">
+
+
+        <form method="POST">
+            <label for="period_dropdown">Select Interval</label>
+            <select name="period_dropdown" id="period_dropdown">
+                <option value="5min" selected> 5min</option>
+                <option value="15min"> 15min</option>
+                <option value="1D"> 1D</option>
+                <option value="1M"> 1M</option>
+            </select>
+            <button type="submit">Submit</button>
+        </form>
+
+        <div class="ct-chart .ct-perfect-fifth"></div>
+
+        <script>
+            var stock_data = document.querySelector('#stock_data_id').value;
+            stock_data = stock_data.replace(/'/g, '"');
+            stock_data = JSON.parse(stock_data);
+
+            var data = {
+                labels: stock_data.labels,
+            series: [stock_data.closing]
+            };
+            new Chartist.Line('.ct-chart', data);
+        </script>
+    </body>
+
+</html>
