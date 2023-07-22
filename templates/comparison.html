@@ -12,10 +12,16 @@
         <input type="hidden"  id="stock_data_id" value="{{ stock_data }}">
 
         <div>
-            <div>Stock Name : {{ stock_data.symbol }}</div>
-            <div>Minimum : {{ stock_data.min }}</div>
-            <div>Maximum : {{ stock_data.max }}</div>
-            <div>Average : {{ stock_data.average }}</div>
+            <div>Stock Name : {{ stock_data[0].symbol }}</div>
+            <div>Minimum : {{ stock_data[0].min }}</div>
+            <div>Maximum : {{ stock_data[0].max }}</div>
+            <div>Average : {{ stock_data[0].average }}</div>
+        </div>
+        <div>
+            <div>Stock Name : {{ stock_data[1].symbol }}</div>
+            <div>Minimum : {{ stock_data[1].min }}</div>
+            <div>Maximum : {{ stock_data[1].max }}</div>
+            <div>Average : {{ stock_data[1].average }}</div>
         </div>
 
         <form method="POST">
@@ -41,7 +47,6 @@
 
         <div class="ct-chart .ct-perfect-fifth"></div>
         <div class="ct-chart2 .ct-perfect-fifth"></div>
-        <div class="ct-chart3 .ct-perfect-fifth"></div>
 
         <script>
             var stock_data = document.querySelector('#stock_data_id').value;
@@ -49,28 +54,10 @@
             stock_data = JSON.parse(stock_data);
 
             var data = {
-                labels: stock_data.labels,
-                series: [stock_data.closing]
+                labels: stock_data[0].labels,
+                series: [stock_data[0].closing, stock_data[1].closing]
             };
             new Chartist.Line('.ct-chart', data);
-            
-            var x = [], y = [];
-            stock_data.rsi.forEach(element => {
-                x.push(70);
-                y.push(30);
-            });
-
-            var data2 = {
-                labels: stock_data.labels,
-                series: [x, y, stock_data.rsi]
-            };
-            new Chartist.Line('.ct-chart2', data2);
-
-            var data3 = {
-                labels: stock_data.labels,
-                series: [stock_data.ma]
-            };
-            new Chartist.Line('.ct-chart3', data3);
         </script>
     </body>
 

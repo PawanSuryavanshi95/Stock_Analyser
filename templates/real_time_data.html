@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Real Time Data</title>
+    </head>
+    <body>
+        <h1>Real Time Stock Data</h1>
+
+        <div class="display" id="display"></div>
+        <input type="button" value="yoo" onclick="yooo()"/>
+        <script>
+            async function get_new_data(){
+                const url = 'https://real-time-quotes1.p.rapidapi.com/api/v1/symbol/stock?includeNames=false';
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': '8df590c5ecmsh987bf572c322f98p12fb4bjsn5b4fc10f6825',
+                        'X-RapidAPI-Host': 'real-time-quotes1.p.rapidapi.com'
+                    }
+                };
+
+                // try {
+                //     const response = await fetch(url, options);
+                //     const result = await response.text();
+                //     console.log(result);
+                // } catch (error) {
+                //     console.error(error);
+                // }
+
+                var d = new Date();
+
+                document.getElementById("display").innerHTML = d
+
+            }
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            async function run() {
+                while(true){
+                    await sleep(2000);
+                    get_new_data();
+                }   
+            }
+            run()
+            
+        </script>
+    </body>
+
+</html>
