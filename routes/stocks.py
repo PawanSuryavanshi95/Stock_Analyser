@@ -12,14 +12,14 @@ async def show(request):
 
 @stocks_bp.get("/show-list")
 async def show_list(request):
-    rows = read_db()
+    rows = await read_db()
     return json({"stock_list": rows})
 
 @stocks_bp.post("/add-stock")
 async def add_stock(request):
     body = request.json
     
-    result = add_db(body['stock_name'])
+    result = await add_db(body['stock_name'])
 
     if result:
         return text("Success")
@@ -30,7 +30,7 @@ async def add_stock(request):
 async def remove_stock(request):
     body = request.json
     
-    result = remove_db(body['stock_name'])
+    result = await remove_db(body['stock_name'])
     
     if result:
         return text("Success")

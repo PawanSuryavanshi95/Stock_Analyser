@@ -24,26 +24,7 @@
             <div>Average : {{ stock_data[1].average }}</div>
         </div>
 
-        <form method="POST">
-            
-            <label for="duration_dropdown">Select Duration</label>
-            <select name="duration_dropdown" id="duration_dropdown">
-                <option value="1M" selected> 1M</option>
-                <option value="3M"> 3M</option>
-                <option value="6M"> 6M</option>
-                <option value="1Y"> 1Y</option>
-            </select>
-
-            <label for="candle_size_dropdown">Select Candle Size</label>
-            <select name="candle_size_dropdown" id="candle_size_dropdown">
-                <option value="5min" selected> 5min</option>
-                <option value="15min"> 15min</option>
-                <option value="1D"> 1D</option>
-                <option value="1M"> 1M</option>
-            </select>
-
-            <button type="submit">Submit</button>
-        </form>
+        {% include 'form.html' %}
 
         <div class="ct-chart .ct-perfect-fifth"></div>
         <div class="ct-chart2 .ct-perfect-fifth"></div>

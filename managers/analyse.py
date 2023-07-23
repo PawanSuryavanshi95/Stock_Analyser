@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import datetime
 import time
+import os
 
 from utils import *
 
@@ -15,7 +16,6 @@ async def get_historical_data(candle_size, duration, stock):
     num, chars = break_string(candle_size)
 
     if chars in period_function_mapping.keys():
-
         function_type = period_function_mapping[chars]
     else:
         function_type = "TIME_SERIES_DAILY"
@@ -23,13 +23,15 @@ async def get_historical_data(candle_size, duration, stock):
     interval = candle_size
     url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
 
-    res = await make_request(url)
+    try:
+        res = await make_request(url)
+    except Exception as e:
+        return (False, str(e))
 
     if len(res.keys()) == 1:
-        print(res)
-        print("Retrying")
-        time.sleep(60)
-        res = await make_request(url)
+        message = res[list(res.keys())[0]]
+        print(message)
+        return (False, message)
 
     data = res[list(res.keys())[1]]
 
@@ -114,8 +116,11 @@ async def get_historical_data(candle_size, duration, stock):
     for i in rsi_window:
         rsi.append(0)
     
+    j = len(ma_window)
     for i in ma_window:
-        ma.append(0)
+        ma.append(sum/j)
+        sum -= i
+        j -= 1
     
     avg = avg/len(labels)
 
@@ -130,4 +135,4 @@ async def get_historical_data(candle_size, duration, stock):
         "ma": list(reversed(ma))
     }
 
-    return stock_data
+    return (True, stock_data)

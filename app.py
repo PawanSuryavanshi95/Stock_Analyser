@@ -11,5 +11,5 @@ app.blueprint(root_group)
 async def hello_world(request):
     return text("Stock Analyser App \n\nMade By - Pawandeep Suryavanshi")
 
-# if __name__ == '__main__':
-#     app.run()
+if __name__ == '__main__':
+    app.run()

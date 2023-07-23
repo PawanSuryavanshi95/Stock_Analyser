@@ -1,20 +1,20 @@
 import csv
 
-def read_db():
-    with open('db.csv', 'r') as f:
+async def read_db():
+    with open('db/stocks.csv', 'r') as f:
         rows = f.readlines()
     
     rows = [x.split('\n')[0] for x in rows]
 
     return rows
 
-def add_db(stock_name):
+async def add_db(stock_name):
 
-    rows = read_db()
+    rows = await read_db()
 
     if not stock_name in rows:
 
-        with open('db.csv', 'a') as f:
+        with open('db/stocks.csv', 'a') as f:
 
             write = csv.writer(f)
             write.writerows([[stock_name]])
@@ -23,9 +23,9 @@ def add_db(stock_name):
     
     return False
 
-def remove_db(stock_name):
+async def remove_db(stock_name):
 
-    rows = read_db()
+    rows = await read_db()
 
     if stock_name in rows:
 
@@ -33,7 +33,7 @@ def remove_db(stock_name):
 
         rows = [[x] for x in rows]
 
-        with open('db.csv', 'w') as f:
+        with open('db/stocks.csv', 'w') as f:
 
             write = csv.writer(f)
             write.writerows(rows)
@@ -41,3 +41,18 @@ def remove_db(stock_name):
         return True
     
     return False
+
+async def get_preferences():
+    with open('db/preferences.csv', 'r') as f:
+        rows = f.readlines()
+    
+    rows = [x.split('\n')[0] for x in rows]
+
+    return rows
+
+async def update_preferences(candle_size, duration):
+
+    with open('db/preferences.csv', 'w') as f:
+
+            write = csv.writer(f)
+            write.writerows([[candle_size], [duration]])
