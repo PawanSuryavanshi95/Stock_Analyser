@@ -33,40 +33,41 @@
 </div>
 
 <div class="footer" style="margin-top: 10px;">
-    Previously Analysed Stocks : {% for i in previous_stocks %} <a href="v1/analyse/historical-analysis/{{i}}">{{i}}</a> {% endfor %}
+    Previously Analysed Stocks : {% for i in previous_stocks %} <a href="v1/analyse/historical-analysis/{{i}}">{{i}}</a>
+    {% endfor %}
 </div>
 {% endblock %}
 {% block script %}
-        <script>
-            var stock_data = document.querySelector('#stock_data_id').value;
-        stock_data = stock_data.replace(/'/g, '"');
-        stock_data = JSON.parse(stock_data);
-        var options = {
-            showPoint: false,
-            lineSmooth: false
-        };
-        var data = {
-            labels: stock_data.labels,
-            series: [stock_data.closing]
-        };
-        new Chartist.Line('.ct-chart', data, options);
+<script>
+    var stock_data = document.querySelector('#stock_data_id').value;
+    stock_data = stock_data.replace(/'/g, '"');
+    stock_data = JSON.parse(stock_data);
+    var options = {
+        showPoint: false,
+        lineSmooth: false
+    };
+    var data = {
+        labels: stock_data.labels,
+        series: [stock_data.closing]
+    };
+    new Chartist.Line('.ct-chart', data, options);
 
-        var x = [], y = [];
-        stock_data.rsi.forEach(element => {
-            x.push(70);
-            y.push(30);
-        });
+    var x = [], y = [];
+    stock_data.rsi.forEach(element => {
+        x.push(70);
+        y.push(30);
+    });
 
-        var data2 = {
-            labels: stock_data.labels,
-            series: [x, y, stock_data.rsi]
-        };
-        new Chartist.Line('.ct-chart2', data2, options);
+    var data2 = {
+        labels: stock_data.labels,
+        series: [x, y, stock_data.rsi]
+    };
+    new Chartist.Line('.ct-chart2', data2, options);
 
-        var data3 = {
-            labels: stock_data.labels,
-            series: [stock_data.ma]
-        };
-        new Chartist.Line('.ct-chart3', data3, options);
-        </script>
+    var data3 = {
+        labels: stock_data.labels,
+        series: [stock_data.ma]
+    };
+    new Chartist.Line('.ct-chart3', data3, options);
+</script>
 {% endblock %}

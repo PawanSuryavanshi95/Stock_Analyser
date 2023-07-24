@@ -9,6 +9,10 @@ app.blueprint(root_group)
 
 @app.get("/")
 async def hello_world(request):
+    return text("Stock Analyser App \n\nMade By - Pawandeep Suryavanshi and Aditya Jain")
+
+@app.get("/help")
+async def help(request):
     return text("Stock Analyser App \n\nMade By - Pawandeep Suryavanshi")
 
 if __name__ == '__main__':

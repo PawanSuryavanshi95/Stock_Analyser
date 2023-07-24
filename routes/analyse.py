@@ -51,6 +51,9 @@ async def compare(request, stocks):
     candle_size = rows[0]
     duration = rows[1]
 
+    if len(stocks.split("&")) != 2:
+        return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
+
     stock1 = stocks.split("&")[0]
     stock2 = stocks.split("&")[1]
 

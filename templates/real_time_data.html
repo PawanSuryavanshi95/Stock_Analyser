@@ -1,55 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Real Time Data</title>
-    </head>
-    <body>
-        <h1>Real Time Stock Data</h1>
 
-        <div class="display" id="display"></div>
-        <input type="hidden"  id="data"  value="{{ data }}"/>
-        <script>
-            var data = document.querySelector('#data').value;
-            data = data.replace(/'/g, '"');
-            data = JSON.parse(data);
-            async function get_new_data(){
-                var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + data.stock + '&apikey=HPW3V08L6PT7390N';
-                const options = {
-                    method: 'GET'
-                };
-
-                try {
-                    const response = await fetch(url);
-                    const result = await response.text();
-                    console.log(result)
-                    const quote = JSON.parse(result)['Global Quote'];
-                    var d = new Date();
-
-                    console.log(quote);
-
-                    document.getElementById("display").innerHTML += `<div> 
-                        Price : ${quote['05. price']} <br>
-                        Volume : ${quote['06. volume']} <br>
-                        Change : ${quote['09. change']} <br>
-                        Percent Change : ${quote['10. change percent']} <br>
-                        Updated : ${d}<br></div>`
-                } catch (error) {
-                    console.error(error);
-                }
-
+<head>
+    <title>Real Time Data</title>
+</head>
+<style>
+    body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
             }
-            function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
+    .center-container {
+        display: block;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    .stock-data-container {
+        margin: 0 auto;
+        display: block;
+        align-self: center;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        width: 300px;
+    }
+
+    .stock-data-container div {
+        margin-bottom: 5px;
+    }
+    .stock-data-label {
+                font-weight: bold;
             }
-            async function run() {
-                while(true){
-                    get_new_data();
-                    await sleep(20000);
-                }   
+</style>
+
+<body style="text-align: center">
+    <h1>Real Time Stock Data</h1>
+    <div calss="center-container">
+    <div class="display center-container" id="display"></div>
+    </div> 
+    <input type="hidden" id="data" value="{{ data }}" />
+    <script>
+        var data = document.querySelector('#data').value;
+        data = data.replace(/'/g, '"');
+        data = JSON.parse(data);
+        async function get_new_data() {
+            var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + data.stock + '&apikey=HPW3V08L6PT7390N';
+            const options = {
+                method: 'GET'
+            };
+
+            try {
+                const response = await fetch(url);
+                const result = await response.text();
+                console.log(result)
+                const quote = JSON.parse(result)['Global Quote'];
+                var d = new Date();
+
+                console.log(quote);
+
+        //         document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
+        //             <div class="stock-data-label">Price:</div>
+        // <div>sfdgf</div>
+        // <div class="stock-data-label">Volume:</div>
+        // <div>dsfsd</div>
+        // <div class="stock-data-label">Change:</div>
+        // <div>sdfsd</div>
+        // <div class="stock-data-label">Percent Change:</div>
+        // <div>fxv</div>
+        // <div class="stock-data-label">Updated:</div>
+        // <div>fdvdcx</div></div><br>`
+
+        document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
+                    <div class="stock-data-label">Price:</div>
+        <div>${quote['05. price']}</div>
+        <div class="stock-data-label">Volume:</div>
+        <div>${quote['06. volume']}</div>
+        <div class="stock-data-label">Change:</div>
+        <div>${quote['09. change']}</div>
+        <div class="stock-data-label">Percent Change:</div>
+        <div>${quote['10. change percent']}</div>
+        <div class="stock-data-label">Updated:</div>
+        <div>${d}</div></div><br>`
+            } catch (error) {
+                console.error(error);
             }
-            run()
-            
-        </script>
-    </body>
+
+        }
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        async function run() {
+            while (true) {
+                get_new_data();
+                await sleep(20000);
+            }
+        }
+        run()
+
+    </script>
+</body>
 
 </html>
