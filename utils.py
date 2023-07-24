@@ -14,5 +14,5 @@ def break_string(x):
 
 async def make_request(url):
     async with CachedSession(cache=SQLiteBackend()) as session:
-        async with session.get(url) as resp:
+        async with session.get(url, ssl=False) as resp:
             return await resp.json()

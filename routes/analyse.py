@@ -3,17 +3,18 @@ from sanic.response import text
 from sanic_ext import render
 
 from managers.stocks import read_db, add_db, remove_db, update_preferences, get_preferences
-from managers.analyse import get_historical_data
+from managers.analyse import get_historical_data, get_historical_data_df
 
-analyse_bp = Blueprint('analyse', version = 1,  url_prefix="/analyse")
+analyse_bp = Blueprint('analyse', version=1, url_prefix="/analyse")
+
 
 @analyse_bp.get("/")
-async def show(request):    
+async def show(request):
     return text("Analyse Blueprint Root")
+
 
 @analyse_bp.route("/historical-analysis/<stock>", methods=['GET', 'POST'])
 async def historical_analysis(request, stock):
-
     rows = await get_preferences()
     stock_list = await read_db()
 
@@ -26,25 +27,25 @@ async def historical_analysis(request, stock):
 
         await update_preferences(candle_size, duration)
 
-    success, stock_data = await get_historical_data(candle_size, duration, stock)
-
+    success, stock_data = await get_historical_data_df(candle_size, duration, stock)
+    print(stock_data)
     if success:
         await add_db(stock)
         return await render(
             "historical_data.html",
-            context = {
+            context={
                 "stock_data": stock_data,
-                "preferences":[ candle_size, duration],
+                "preferences": [candle_size, duration],
                 "previous_stocks": stock_list
             },
             status=200
         )
-    
+
     return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data))
+
 
 @analyse_bp.route("/compare/<stocks>", methods=['GET', 'POST'])
 async def compare(request, stocks):
-
     rows = await get_preferences()
     stock_list = await read_db()
 
@@ -66,28 +67,28 @@ async def compare(request, stocks):
 
         await update_preferences(candle_size, duration)
 
-    success1, stock_data1 = await get_historical_data(candle_size, duration, stock1)
-    success2, stock_data2 = await get_historical_data(candle_size, duration, stock2)
+    success1, stock_data1 = await get_historical_data_df(candle_size, duration, stock1)
+    success2, stock_data2 = await get_historical_data_df(candle_size, duration, stock2)
 
     if not success1:
         return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data1))
-    
+
     if not success2:
         return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data2))
-    
+
     return await render(
         "comparison.html",
-        context = {
+        context={
             "stock_data": [stock_data1, stock_data2],
-            "preferences":[ candle_size, duration],
+            "preferences": [candle_size, duration],
             "previous_stocks": stock_list
         },
         status=200
     )
 
+
 @analyse_bp.route("/real-time/<stock>", methods=['GET', 'POST'])
 async def real_time(request, stock):
-
     return await render(
         "real_time_data.html", context={"data": {"stock": stock}}, status=200
     )

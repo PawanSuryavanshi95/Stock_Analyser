@@ -1,17 +1,84 @@
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 import datetime
 import time
 import os
-
+import pandas as pd
 from utils import *
-
-from common import period_function_mapping
-
+from common import period_function_mapping, URL
 load_dotenv()
 
-ALPHA_VANTAGE_API_KEY = "KYF5EDJZRCVJ4JTZ"
+ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY3')
 
-URL = "https://www.alphavantage.co/query?function={}&symbol={}&interval={}&apikey={}"
+
+async def calculate_rsi(prices, period=14):
+    delta = prices.diff().dropna()
+    gains = delta.where(delta > 0, 0)
+    losses = -delta.where(delta < 0, 0)
+    avg_gains = gains.rolling(window=period).mean()
+    avg_losses = losses.rolling(window=period).mean()
+    rs = avg_gains / avg_losses
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+
+async def get_historical_data_df(candle_size, duration, stock):
+    num, chars = break_string(candle_size)
+
+    function_type = period_function_mapping.get(chars, "TIME_SERIES_DAILY")
+
+    symbol = stock
+    interval = candle_size
+    url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
+    print(url)
+    try:
+        res = await make_request(url)
+    except Exception as e:
+        return False, str(e)
+
+    if len(res.keys()) == 1:
+        message = res[list(res.keys())[0]]
+        print(message)
+        return False, message
+
+    data = res[list(res.keys())[1]]
+    data_df = pd.DataFrame(data).T
+
+    today_date = datetime.datetime.now().date()
+    num, chars = break_string(duration)
+    if chars == 'Y':
+        final_date = today_date + relativedelta(year=-1)
+    else:
+        final_date = today_date + relativedelta(months=-(int(num)))
+
+    start_date = final_date.strftime('%Y-%m-%d')
+    end_date = today_date.strftime('%Y-%m-%d')
+    data_df['4. close'] = data_df['4. close'].astype(float)
+
+    data_df = data_df[::-1]
+    data_df['MA'] = data_df['4. close'].rolling(7).mean()
+    data_df['RSI'] = await calculate_rsi(data_df['4. close'])
+    data_df['RSI'] = data_df['RSI'].fillna(0)
+    data_df['MA'] = data_df['MA'].fillna(0)
+    data_df = data_df[::-1]
+
+    data_df = data_df.loc[(data_df.index >= start_date) & (data_df.index <= end_date)]
+    min_close = data_df['4. close'].min()
+    max_close = data_df['4. close'].max()
+    avg_close = data_df['4. close'].mean()
+
+    stock_data = {
+        "symbol": stock,
+        "labels": data_df.index.tolist(),
+        "closing": data_df['4. close'].tolist(),
+        "min": float(min_close),
+        "max": float(max_close),
+        "average": float(avg_close),
+        "ma": data_df['MA'].tolist(),
+        "rsi": data_df['RSI'].tolist()
+    }
+    return True, stock_data
+
 
 async def get_historical_data(candle_size, duration, stock):
 

@@ -42,9 +42,16 @@
     var stock_data = document.querySelector('#stock_data_id').value;
     stock_data = stock_data.replace(/'/g, '"');
     stock_data = JSON.parse(stock_data);
+
     var options = {
         showPoint: false,
-        lineSmooth: false
+        lineSmooth: false,
+        axisX: {
+            labelInterpolationFnc: function(value, index) {
+              // Show every other label on the X-axis
+              return index % 10 === 0 ? value : '';
+        }
+  }
     };
     var data = {
         labels: stock_data.labels,
