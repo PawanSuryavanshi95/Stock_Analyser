@@ -1,26 +1,57 @@
-from dotenv import load_dotenv
 import datetime
 import time
-import os
+from dateutil.relativedelta import relativedelta
+from sanic.response import text
+from sanic_ext import render
 
 from utils import *
+from managers.stocks import read_stock, add_stock, remove_stock, update_preferences, get_preferences
+from common import period_function_mapping, URL, ALPHA_VANTAGE_API_KEY
 
-from common import period_function_mapping
+async def historical_analysis_manager(request, stock_list, template, post = True):
+    
+    previous_stocks = await read_stock()
 
-load_dotenv()
+    candle_size = None
+    duration = None
 
-ALPHA_VANTAGE_API_KEY = "KYF5EDJZRCVJ4JTZ"
+    if post:
+        candle_size = request.form.get('candle_size_dropdown')
+        duration = request.form.get('duration_dropdown')
+        await update_preferences(candle_size, duration)
+    else:
+        rows = await get_preferences()
+        candle_size = rows[0]
+        duration = rows[1]
 
-URL = "https://www.alphavantage.co/query?function={}&symbol={}&interval={}&apikey={}"
+    stock_data = []
+
+    for stock in stock_list:
+
+        success, historical_data = await get_historical_data(candle_size, duration, stock)
+
+        if not success:
+            return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data))
+        
+        await add_stock(stock)
+
+        stock_data.append(historical_data)
+
+    return await render(
+        template,
+        context = {
+            "stock_data": stock_data,
+            "preferences":[ candle_size, duration],
+            "previous_stocks": previous_stocks
+        },
+        status=200
+    )
 
 async def get_historical_data(candle_size, duration, stock):
 
-    num, chars = break_string(candle_size)
+    candle_size_prefix, candle_size_suffix = break_string(candle_size)
 
-    if chars in period_function_mapping.keys():
-        function_type = period_function_mapping[chars]
-    else:
-        function_type = "TIME_SERIES_DAILY"
+    function_type = period_function_mapping.get(candle_size_suffix, "TIME_SERIES_DAILY")
     symbol = stock
     interval = candle_size
     url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
@@ -29,28 +60,39 @@ async def get_historical_data(candle_size, duration, stock):
         res = await make_request(url)
     except Exception as e:
         return (False, str(e))
+    
+    time_series_data = None
 
-    if len(res.keys()) == 1:
-        message = res[list(res.keys())[0]]
+    for key in list(res.keys()):
+        if "Time Series" in key:
+            time_series_data = res[key]
+
+    if time_series_data == None:
+        message = str(res)
         print(message)
         return (False, message)
 
-    data = res[list(res.keys())[1]]
+    stock_data = parse_time_series(time_series_data, duration)
+    stock_data['symbol'] = stock
 
+    return (True, stock_data)
+
+def parse_time_series(data, duration):
     today_date = datetime.datetime.now().date()
 
-    num, chars = break_string(duration)
-
-    if chars == 'Y':
-        final_date = today_date.replace(year = today_date.year - 1)
+    duration_prefix, duration_suffix = break_string(duration)
+    
+    old_date = today_date
+    if duration_suffix == 'Y':
+        old_date -= relativedelta(years=1)
     else:
-        final_date = today_date.replace(month = today_date.month - int(num))
-
+        old_date -= relativedelta(months=int(duration_prefix))
+    
     labels = []
     closing = []
 
-    m1 = float('inf')
-    m2 = float('-inf')
+    minimum_stock_price = float('inf')
+    maximum_stock_price = float('-inf')
     avg = 0
 
     i = 0
@@ -71,8 +113,7 @@ async def get_historical_data(candle_size, duration, stock):
             i = 0
         kk = k.split(' ')[0]
         k_date = datetime.datetime.strptime(kk, "%Y-%m-%d").date()
-        if final_date > k_date:
-            print("yoo")
+        if old_date > k_date:
             break
         
         close = float(data[k]["4. close"])
@@ -109,8 +150,8 @@ async def get_historical_data(candle_size, duration, stock):
         else:
             labels.append("")
         closing.append(close)
-        m1 = min(m1, close)
-        m2 = max(m2, close)
+        minimum_stock_price = min(minimum_stock_price, close)
+        maximum_stock_price = max(maximum_stock_price, close)
         avg += close
 
         i = i + 1
@@ -127,14 +168,13 @@ async def get_historical_data(candle_size, duration, stock):
     avg = avg/len(labels)
 
     stock_data = {
-        "symbol": stock,
         "labels": list(reversed(labels)),
         "closing": list(reversed(closing)),
-        "min": m1,
-        "max": m2,
+        "min": minimum_stock_price,
+        "max": maximum_stock_price,
         "average": avg,
         "rsi": list(reversed(rsi)),
         "ma": list(reversed(ma))
     }
 
-    return (True, stock_data)
+    return stock_data

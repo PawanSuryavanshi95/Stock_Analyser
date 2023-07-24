@@ -8,13 +8,13 @@
 <div class="center-container">
     <div class="stock-data-container">
         <div class="stock-data-label">Stock Name:</div>
-        <div>{{ stock_data.symbol }}</div>
+        <div>{{ stock_data[0].symbol }}</div>
         <div class="stock-data-label">Minimum:</div>
-        <div>{{ stock_data.min }}</div>
+        <div>{{ stock_data[0].min }}</div>
         <div class="stock-data-label">Maximum:</div>
-        <div>{{ stock_data.max }}</div>
+        <div>{{ stock_data[0].max }}</div>
         <div class="stock-data-label">Average:</div>
-        <div>{{ stock_data.average }}</div>
+        <div>{{ stock_data[0].average }}</div>
     </div>
 </div>
 
@@ -47,26 +47,26 @@
         lineSmooth: false
     };
     var data = {
-        labels: stock_data.labels,
-        series: [stock_data.closing]
+        labels: stock_data[0].labels,
+        series: [stock_data[0].closing]
     };
     new Chartist.Line('.ct-chart', data, options);
 
     var x = [], y = [];
-    stock_data.rsi.forEach(element => {
+    stock_data[0].rsi.forEach(element => {
         x.push(70);
         y.push(30);
-    });
+    }); 
 
     var data2 = {
-        labels: stock_data.labels,
-        series: [x, y, stock_data.rsi]
+        labels: stock_data[0].labels,
+        series: [x, y, stock_data[0].rsi]
     };
     new Chartist.Line('.ct-chart2', data2, options);
 
     var data3 = {
-        labels: stock_data.labels,
-        series: [stock_data.ma]
+        labels: stock_data[0].labels,
+        series: [stock_data[0].ma]
     };
     new Chartist.Line('.ct-chart3', data3, options);
 </script>

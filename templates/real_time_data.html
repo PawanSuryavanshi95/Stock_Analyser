@@ -60,29 +60,18 @@
 
                 console.log(quote);
 
-        //         document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
-        //             <div class="stock-data-label">Price:</div>
-        // <div>sfdgf</div>
-        // <div class="stock-data-label">Volume:</div>
-        // <div>dsfsd</div>
-        // <div class="stock-data-label">Change:</div>
-        // <div>sdfsd</div>
-        // <div class="stock-data-label">Percent Change:</div>
-        // <div>fxv</div>
-        // <div class="stock-data-label">Updated:</div>
-        // <div>fdvdcx</div></div><br>`
-
-        document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
-                    <div class="stock-data-label">Price:</div>
-        <div>${quote['05. price']}</div>
-        <div class="stock-data-label">Volume:</div>
-        <div>${quote['06. volume']}</div>
-        <div class="stock-data-label">Change:</div>
-        <div>${quote['09. change']}</div>
-        <div class="stock-data-label">Percent Change:</div>
-        <div>${quote['10. change percent']}</div>
-        <div class="stock-data-label">Updated:</div>
-        <div>${d}</div></div><br>`
+                document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
+                            <div class="stock-data-label">Price:</div>
+                <div>${quote['05. price']}</div>
+                <div class="stock-data-label">Volume:</div>
+                <div>${quote['06. volume']}</div>
+                <div class="stock-data-label">Change:</div>
+                <div>${quote['09. change']}</div>
+                <div class="stock-data-label">Percent Change:</div>
+                <div>${quote['10. change percent']}</div>
+                <div class="stock-data-label">Updated:</div>
+                <div>${d}</div></div><br>`
+                
             } catch (error) {
                 console.error(error);
             }

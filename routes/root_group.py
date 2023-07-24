@@ -1,6 +1,6 @@
 from sanic import Blueprint
 
-from routes.stocks import stocks_bp
-from routes.analyse import analyse_bp
+from routes.stocks import stocks
+from routes.analyse import analyse
 
-root_group = Blueprint.group(stocks_bp, analyse_bp, version=1, url_prefix="/")
+root_group = Blueprint.group(stocks, analyse, version=1, url_prefix="/")

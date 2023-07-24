@@ -12,6 +12,10 @@ def break_string(x):
 
     return number, characters
 
+async def remove_cache_for_url(url):
+    async with CachedSession(cache=SQLiteBackend()) as session:
+        session.delete(url)
+
 async def make_request(url):
     async with CachedSession(cache=SQLiteBackend()) as session:
         async with session.get(url) as resp:

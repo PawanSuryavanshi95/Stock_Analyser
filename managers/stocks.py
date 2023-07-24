@@ -2,7 +2,7 @@ import csv
 
 from common import STOCK_FILE_PATH, PREFERENCES_FILE_PATH
 
-async def read_db():
+async def read_stock():
     with open(STOCK_FILE_PATH, 'r') as f:
         rows = f.readlines()
     
@@ -10,9 +10,9 @@ async def read_db():
 
     return rows
 
-async def add_db(stock_name):
+async def add_stock(stock_name):
 
-    rows = await read_db()
+    rows = await read_stock()
 
     if not stock_name in rows:
 
@@ -25,9 +25,9 @@ async def add_db(stock_name):
     
     return False
 
-async def remove_db(stock_name):
+async def remove_stock(stock_name):
 
-    rows = await read_db()
+    rows = await read_stock()
 
     if stock_name in rows:
 
