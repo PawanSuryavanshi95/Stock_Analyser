@@ -1,45 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
-        <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+{% extends "base.html" %}
+{% block title %}Compare Stocks{% endblock %}
+{% block content %}
+<h1>Historical Price Analysis</h1>
 
-        <title>Historical Analysis</title>
-    </head>
-    <body>
-        <h1>Historical Price Analysis</h1>
+    <input type="hidden" id="stock_data_id" value="{{ stock_data }}">
 
-        <input type="hidden"  id="stock_data_id" value="{{ stock_data }}">
-
-        <div>
-            <div>Stock Name : {{ stock_data[0].symbol }}</div>
-            <div>Minimum : {{ stock_data[0].min }}</div>
-            <div>Maximum : {{ stock_data[0].max }}</div>
-            <div>Average : {{ stock_data[0].average }}</div>
-        </div>
-        <div>
-            <div>Stock Name : {{ stock_data[1].symbol }}</div>
-            <div>Minimum : {{ stock_data[1].min }}</div>
-            <div>Maximum : {{ stock_data[1].max }}</div>
-            <div>Average : {{ stock_data[1].average }}</div>
+    <div class="center-container">
+        <div class="stock-data-container">
+            <div class="stock-data-label">Stock Name:</div>
+            <div>{{ stock_data[0].symbol }}</div>
+            <div class="stock-data-label">Minimum:</div>
+            <div>{{ stock_data[0].min }}</div>
+            <div class="stock-data-label">Maximum:</div>
+            <div>{{ stock_data[0].max }}</div>
+            <div class="stock-data-label">Average:</div>
+            <div>{{ stock_data[0].average }}</div>
         </div>
 
-        {% include 'form.html' %}
+        <div class="stock-data-container">
+            <div class="stock-data-label">Stock Name:</div>
+            <div>{{ stock_data[1].symbol }}</div>
+            <div class="stock-data-label">Minimum:</div>
+            <div>{{ stock_data[1].min }}</div>
+            <div class="stock-data-label">Maximum:</div>
+            <div>{{ stock_data[1].max }}</div>
+            <div class="stock-data-label">Average:</div>
+            <div>{{ stock_data[1].average }}</div>
+        </div>
+    </div>
 
+    {% include 'form.html' %}
+
+    <div style="border-radius:10px; padding: 5px; border:solid; border-color: black; margin-top: 5px;">
+        <h4>Comparison</h4>
         <div class="ct-chart .ct-perfect-fifth"></div>
-        <div class="ct-chart2 .ct-perfect-fifth"></div>
+    </div>
+{% endblock %}
 
-        <script>
-            var stock_data = document.querySelector('#stock_data_id').value;
-            stock_data = stock_data.replace(/'/g, '"');
-            stock_data = JSON.parse(stock_data);
-
-            var data = {
-                labels: stock_data[0].labels,
-                series: [stock_data[0].closing, stock_data[1].closing]
-            };
-            new Chartist.Line('.ct-chart', data);
-        </script>
-    </body>
-
-</html>
+{% block script %}
+<script>
+    var stock_data = document.querySelector('#stock_data_id').value;
+    stock_data = stock_data.replace(/'/g, '"');
+    stock_data = JSON.parse(stock_data);
+    var options = {
+        showPoint: false,
+        lineSmooth: false,
+    };
+    var data = {
+        labels: stock_data[0].labels,
+        series: [stock_data[0].closing, stock_data[1].closing]
+    };
+    new Chartist.Line('.ct-chart', data, options);
+</script>
+{% endblock %}

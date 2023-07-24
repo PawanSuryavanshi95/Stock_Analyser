@@ -5,6 +5,8 @@ import os
 
 from utils import *
 
+from common import period_function_mapping
+
 load_dotenv()
 
 ALPHA_VANTAGE_API_KEY = "KYF5EDJZRCVJ4JTZ"

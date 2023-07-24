@@ -3,13 +3,6 @@ import asyncio
 import aiohttp
 import re
 
-period_function_mapping = {
-    'min': "TIME_SERIES_INTRADAY",
-    'D': "TIME_SERIES_DAILY",
-    'W': "TIME_SERIES_WEEKLY",
-    'M': "TIME_SERIES_MONTHLY"
-}
-
 
 def break_string(x):
     pattern = r'(\d+)(\D+)'

@@ -14,11 +14,11 @@ async def show(request):
 @analyse_bp.route("/historical-analysis/<stock>", methods=['GET', 'POST'])
 async def historical_analysis(request, stock):
 
-    with open('db/preferences.csv', 'r') as f:
-        rows = f.readlines()
+    rows = await get_preferences()
+    stock_list = await read_db()
 
-    candle_size = rows[0].split("\n")[0]
-    duration = rows[1].split("\n")[0]
+    candle_size = rows[0]
+    duration = rows[1]
 
     if request.method == 'POST':
         candle_size = request.form.get('candle_size_dropdown')
@@ -29,8 +29,15 @@ async def historical_analysis(request, stock):
     success, stock_data = await get_historical_data(candle_size, duration, stock)
 
     if success:
+        await add_db(stock)
         return await render(
-            "historical_data.html", context={"stock_data": stock_data, "preferences":[ candle_size, duration]}, status=200
+            "historical_data.html",
+            context = {
+                "stock_data": stock_data,
+                "preferences":[ candle_size, duration],
+                "previous_stocks": stock_list
+            },
+            status=200
         )
     
     return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data))
@@ -38,14 +45,17 @@ async def historical_analysis(request, stock):
 @analyse_bp.route("/compare/<stocks>", methods=['GET', 'POST'])
 async def compare(request, stocks):
 
-    with open('db/preferences.csv', 'r') as f:
-        rows = f.readlines()
+    rows = await get_preferences()
+    stock_list = await read_db()
 
-    candle_size = rows[0].split("\n")[0]
-    duration = rows[1].split("\n")[0]
+    candle_size = rows[0]
+    duration = rows[1]
 
     stock1 = stocks.split("&")[0]
     stock2 = stocks.split("&")[1]
+
+    await add_db(stock1)
+    await add_db(stock2)
 
     if request.method == 'POST':
         candle_size = request.form.get('candle_size_dropdown')
@@ -55,7 +65,7 @@ async def compare(request, stocks):
 
     success1, stock_data1 = await get_historical_data(candle_size, duration, stock1)
     success2, stock_data2 = await get_historical_data(candle_size, duration, stock2)
-    
+
     if not success1:
         return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data1))
     
@@ -63,12 +73,18 @@ async def compare(request, stocks):
         return text("Something Went Wrong :( \nRefer to the below message\n" + str(stock_data2))
     
     return await render(
-        "comparison.html", context={"stock_data": [stock_data1, stock_data2], "preferences":[ candle_size, duration]}, status=200
+        "comparison.html",
+        context = {
+            "stock_data": [stock_data1, stock_data2],
+            "preferences":[ candle_size, duration],
+            "previous_stocks": stock_list
+        },
+        status=200
     )
 
 @analyse_bp.route("/real-time/<stock>", methods=['GET', 'POST'])
 async def real_time(request, stock):
 
     return await render(
-        "real_time_data.html", context={"stock_data": "stock_data"}, status=200
+        "real_time_data.html", context={"data": {"stock": stock}}, status=200
     )

@@ -7,29 +7,35 @@
         <h1>Real Time Stock Data</h1>
 
         <div class="display" id="display"></div>
-        <input type="button" value="yoo" onclick="yooo()"/>
+        <input type="hidden"  id="data"  value="{{ data }}"/>
         <script>
+            var data = document.querySelector('#data').value;
+            data = data.replace(/'/g, '"');
+            data = JSON.parse(data);
             async function get_new_data(){
-                const url = 'https://real-time-quotes1.p.rapidapi.com/api/v1/symbol/stock?includeNames=false';
+                var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + data.stock + '&apikey=HPW3V08L6PT7390N';
                 const options = {
-                    method: 'GET',
-                    headers: {
-                        'X-RapidAPI-Key': '8df590c5ecmsh987bf572c322f98p12fb4bjsn5b4fc10f6825',
-                        'X-RapidAPI-Host': 'real-time-quotes1.p.rapidapi.com'
-                    }
+                    method: 'GET'
                 };
 
-                // try {
-                //     const response = await fetch(url, options);
-                //     const result = await response.text();
-                //     console.log(result);
-                // } catch (error) {
-                //     console.error(error);
-                // }
+                try {
+                    const response = await fetch(url);
+                    const result = await response.text();
+                    console.log(result)
+                    const quote = JSON.parse(result)['Global Quote'];
+                    var d = new Date();
 
-                var d = new Date();
+                    console.log(quote);
 
-                document.getElementById("display").innerHTML = d
+                    document.getElementById("display").innerHTML += `<div> 
+                        Price : ${quote['05. price']} <br>
+                        Volume : ${quote['06. volume']} <br>
+                        Change : ${quote['09. change']} <br>
+                        Percent Change : ${quote['10. change percent']} <br>
+                        Updated : ${d}<br></div>`
+                } catch (error) {
+                    console.error(error);
+                }
 
             }
             function sleep(ms) {
@@ -37,8 +43,8 @@
             }
             async function run() {
                 while(true){
-                    await sleep(2000);
                     get_new_data();
+                    await sleep(20000);
                 }   
             }
             run()

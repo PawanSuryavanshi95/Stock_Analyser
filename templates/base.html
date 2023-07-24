@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+        <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+        <title>{% block title %}{% endblock %}</title>
+        <style>
+            .ct-line {
+                stroke-width: 2px;
+            }
+    
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+    
+            form {
+                margin-top: 20px;
+            }
+    
+            label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+    
+            select,
+            button {
+                padding: 6px;
+                font-size: 14px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-bottom: 10px;
+            }
+    
+            button {
+                background-color: #007BFF;
+                color: #fff;
+                cursor: pointer;
+            }
+    
+            .center-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+    
+            .stock-data-container {
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                padding: 10px;
+                width: 300px;
+            }
+    
+            .stock-data-container div {
+                margin-bottom: 5px;
+            }
+    
+            .stock-data-label {
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body style="text-align: center">
+        {% block content %}{% endblock %}
+        {% block script %}{% endblock %}
+    </body>
+</html>

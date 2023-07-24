@@ -1,58 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
-        <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+{% extends "base.html" %}
+{% block title %}Historical Analysis{% endblock %}
+{% block content %}
+<h1>Historical Price Analysis</h1>
 
-        <title>Historical Analysis</title>
-    </head>
-    <body>
-        <h1>Historical Price Analysis</h1>
+<input type="hidden" id="stock_data_id" value="{{ stock_data }}">
 
-        <input type="hidden"  id="stock_data_id" value="{{ stock_data }}">
+<div class="center-container">
+    <div class="stock-data-container">
+        <div class="stock-data-label">Stock Name:</div>
+        <div>{{ stock_data.symbol }}</div>
+        <div class="stock-data-label">Minimum:</div>
+        <div>{{ stock_data.min }}</div>
+        <div class="stock-data-label">Maximum:</div>
+        <div>{{ stock_data.max }}</div>
+        <div class="stock-data-label">Average:</div>
+        <div>{{ stock_data.average }}</div>
+    </div>
+</div>
 
-        <div>
-            <div>Stock Name : {{ stock_data.symbol }}</div>
-            <div>Minimum : {{ stock_data.min }}</div>
-            <div>Maximum : {{ stock_data.max }}</div>
-            <div>Average : {{ stock_data.average }}</div>
-        </div>
+{% include 'form.html' %}
+<div style="border-radius:10px; padding: 5px; border:solid; border-color: black; margin-top: 5px;">
+    <h4>Stock Records</h4>
+    <div class="ct-chart .ct-perfect-fifth"></div>
+</div>
+<div style="border-radius:10px; padding: 5px; border:solid; border-color: black; margin-top: 5px;">
+    <h4>Stock RSI</h4>
+    <div class="ct-chart2 .ct-perfect-fifth"></div>
+</div>
+<div style="border-radius:10px; padding: 5px; border:solid; border-color: black; margin-top: 5px;">
+    <h4>Stock Moving Average</h4>
+    <div class="ct-chart3 .ct-perfect-fifth"></div>
+</div>
 
-        {% include 'form.html' %}
-
-        <div class="ct-chart .ct-perfect-fifth"></div>
-        <div class="ct-chart2 .ct-perfect-fifth"></div>
-        <div class="ct-chart3 .ct-perfect-fifth"></div>
-
+<div class="footer" style="margin-top: 10px;">
+    Previously Analysed Stocks : {% for i in previous_stocks %} <a href="v1/analyse/historical-analysis/{{i}}">{{i}}</a> {% endfor %}
+</div>
+{% endblock %}
+{% block script %}
         <script>
             var stock_data = document.querySelector('#stock_data_id').value;
-            stock_data = stock_data.replace(/'/g, '"');
-            stock_data = JSON.parse(stock_data);
+        stock_data = stock_data.replace(/'/g, '"');
+        stock_data = JSON.parse(stock_data);
+        var options = {
+            showPoint: false,
+            lineSmooth: false
+        };
+        var data = {
+            labels: stock_data.labels,
+            series: [stock_data.closing]
+        };
+        new Chartist.Line('.ct-chart', data, options);
 
-            var data = {
-                labels: stock_data.labels,
-                series: [stock_data.closing]
-            };
-            new Chartist.Line('.ct-chart', data);
-            
-            var x = [], y = [];
-            stock_data.rsi.forEach(element => {
-                x.push(70);
-                y.push(30);
-            });
+        var x = [], y = [];
+        stock_data.rsi.forEach(element => {
+            x.push(70);
+            y.push(30);
+        });
 
-            var data2 = {
-                labels: stock_data.labels,
-                series: [x, y, stock_data.rsi]
-            };
-            new Chartist.Line('.ct-chart2', data2);
+        var data2 = {
+            labels: stock_data.labels,
+            series: [x, y, stock_data.rsi]
+        };
+        new Chartist.Line('.ct-chart2', data2, options);
 
-            var data3 = {
-                labels: stock_data.labels,
-                series: [stock_data.ma]
-            };
-            new Chartist.Line('.ct-chart3', data3);
+        var data3 = {
+            labels: stock_data.labels,
+            series: [stock_data.ma]
+        };
+        new Chartist.Line('.ct-chart3', data3, options);
         </script>
-    </body>
-
-</html>
+{% endblock %}
