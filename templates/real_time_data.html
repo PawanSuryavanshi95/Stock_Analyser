@@ -6,14 +6,13 @@
 </head>
 <style>
     body {
-                font-family: Arial, sans-serif;
-                margin: 20px;
-            }
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
     .center-container {
         display: block;
         justify-content: center;
         align-items: center;
-
     }
 
     .stock-data-container {
@@ -60,7 +59,7 @@
 
                 console.log(quote);
 
-                document.getElementById("display").innerHTML += `<div class="stock-data-container"> 
+                document.getElementById("display").innerHTML = `<div class="stock-data-container"> 
                             <div class="stock-data-label">Price:</div>
                 <div>${quote['05. price']}</div>
                 <div class="stock-data-label">Volume:</div>
@@ -70,7 +69,7 @@
                 <div class="stock-data-label">Percent Change:</div>
                 <div>${quote['10. change percent']}</div>
                 <div class="stock-data-label">Updated:</div>
-                <div>${d}</div></div><br>`
+                <div>${d}</div></div><br>` + document.getElementById("display").innerHTML
                 
             } catch (error) {
                 console.error(error);

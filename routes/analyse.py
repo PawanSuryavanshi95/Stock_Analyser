@@ -29,7 +29,7 @@ async def compare_get(request, stocks):
     if len(stock_list) != 2:
         return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
 
-    return await analysis_manager(request, [stock_list[0], stock_list[1]], "comparison.html", False)
+    return await analysis_manager(request, stock_list, "comparison.html", False)
 
 
 @analyse.post("/compare/<stocks>")
@@ -38,10 +38,10 @@ async def compare_post(request, stocks):
     if len(stock_list) != 2:
         return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
 
-    return await analysis_manager(request, [stock_list[0], stock_list[1]], "comparison.html")
+    return await analysis_manager(request, stock_list, "comparison.html")
 
 
-@analyse.route("/real-time/<stock>", methods=['GET', 'POST'])
+@analyse.get("/real-time/<stock>")
 async def real_time(request, stock):
     return await render(
         "real_time_data.html", context={"data": {"stock": stock}}, status=200

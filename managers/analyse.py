@@ -9,6 +9,146 @@ from utils import *
 from managers.stocks import read_stock, add_stock, remove_stock, update_preferences, get_preferences
 from common import period_function_mapping, URL, ALPHA_VANTAGE_API_KEY
 
+async def analysis_manager(request, stock_list, template, post=True):
+    previous_stocks = await read_stock()
+
+    candle_size = None
+    duration = None
+
+    if post:
+        candle_size = request.form.get('candle_size_dropdown')
+        duration = request.form.get('duration_dropdown')
+        await update_preferences(candle_size, duration)
+    else:
+        rows = await get_preferences()
+        candle_size = rows[0]
+        duration = rows[1]
+
+    stock_data = []
+
+    for stock in stock_list:
+
+        success, historical_data = await get_historical_data_df(candle_size, duration, stock)
+
+        if not success:
+            return text("Something Went Wrong :( \nRefer to the below message\n" + str(historical_data))
+
+        await add_stock(stock)
+
+        print(historical_data['ma'])
+        stock_data.append(historical_data)
+
+    return await render(
+        template,
+        context={
+            "stock_data": stock_data,
+            "preferences": [candle_size, duration],
+            "previous_stocks": previous_stocks
+        },
+        status=200
+    )
+
+async def get_historical_data_df(candle_size, duration, stock):
+    candle_size_prefix, candle_size_suffix = break_string(candle_size)
+
+    function_type = period_function_mapping.get(candle_size_suffix, "TIME_SERIES_DAILY")
+    symbol = stock
+    interval = candle_size
+    url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
+
+    try:
+        res = await make_request(url)
+    except Exception as e:
+        return False, str(e)
+
+    time_series_data = None
+
+    for key in list(res.keys()):
+        if "Time Series" in key:
+            time_series_data = res[key]
+
+    if time_series_data is None:
+        message = str(res)
+        print(message)
+        return False, message
+
+    data = res[list(res.keys())[1]]
+    data_df = pd.DataFrame(data).T
+
+    today_date = datetime.datetime.now().date()
+    duration_prefix, duration_suffix = break_string(duration)
+    final_date = today_date
+    if duration_suffix == 'Y':
+        final_date -= relativedelta(years=1)
+    else:
+        final_date -= relativedelta(months=int(duration_prefix))
+
+    start_date = final_date.strftime('%Y-%m-%d')
+    end_date = today_date.strftime('%Y-%m-%d')
+    data_df['4. close'] = data_df['4. close'].astype(float)
+
+    data_df = data_df[::-1]
+    data_df['MA'] = data_df['4. close'].rolling(window=7, min_periods=1).mean()
+    data_df['RSI'] = await calculate_rsi(data_df['4. close'])
+    data_df['RSI'] = data_df['RSI'].fillna(0)
+    data_df['MA'] = data_df['MA'].fillna(0)
+
+    data_df = data_df.loc[(data_df.index >= start_date) & (data_df.index <= end_date)]
+    min_close = data_df['4. close'].min()
+    max_close = data_df['4. close'].max()
+    avg_close = data_df['4. close'].mean()
+
+    stock_data = {
+        "symbol": stock,
+        "labels": data_df.index.tolist(),
+        "closing": data_df['4. close'].tolist(),
+        "min": float(min_close),
+        "max": float(max_close),
+        "average": float(avg_close),
+        "ma": data_df['MA'].tolist(),
+        "rsi": data_df['RSI'].tolist()
+    }
+    return True, stock_data
+
+async def calculate_rsi(prices, period=14):
+    delta = prices.diff().dropna()
+    gains = delta.where(delta > 0, 0)
+    losses = -delta.where(delta < 0, 0)
+    avg_gains = gains.rolling(window=period, min_periods=1).mean()
+    avg_losses = losses.rolling(window=period, min_periods=1).mean()
+    rs = avg_gains / avg_losses
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+async def get_historical_data(candle_size, duration, stock):
+    candle_size_prefix, candle_size_suffix = break_string(candle_size)
+
+    function_type = period_function_mapping.get(candle_size_suffix, "TIME_SERIES_DAILY")
+    symbol = stock
+    interval = candle_size
+    url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
+
+    try:
+        res = await make_request(url)
+    except Exception as e:
+        return False, str(e)
+
+    time_series_data = None
+
+    for key in list(res.keys()):
+        if "Time Series" in key:
+            time_series_data = res[key]
+
+    if time_series_data is None:
+        message = str(res)
+        print(message)
+        return False, message
+
+    stock_data = await parse_time_series(time_series_data, duration)
+    stock_data['symbol'] = stock
+
+    return True, stock_data
+
 
 async def parse_time_series(data, duration):
     today_date = datetime.datetime.now().date()
@@ -110,147 +250,3 @@ async def parse_time_series(data, duration):
     }
 
     return stock_data
-
-
-async def get_historical_data(candle_size, duration, stock):
-    candle_size_prefix, candle_size_suffix = break_string(candle_size)
-
-    function_type = period_function_mapping.get(candle_size_suffix, "TIME_SERIES_DAILY")
-    symbol = stock
-    interval = candle_size
-    url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
-
-    try:
-        res = await make_request(url)
-    except Exception as e:
-        return False, str(e)
-
-    time_series_data = None
-
-    for key in list(res.keys()):
-        if "Time Series" in key:
-            time_series_data = res[key]
-
-    if time_series_data is None:
-        message = str(res)
-        print(message)
-        return False, message
-
-    stock_data = await parse_time_series(time_series_data, duration)
-    stock_data['symbol'] = stock
-
-    return True, stock_data
-
-
-async def analysis_manager(request, stock_list, template, post=True):
-    previous_stocks = await read_stock()
-
-    candle_size = None
-    duration = None
-
-    if post:
-        candle_size = request.form.get('candle_size_dropdown')
-        duration = request.form.get('duration_dropdown')
-        await update_preferences(candle_size, duration)
-    else:
-        rows = await get_preferences()
-        candle_size = rows[0]
-        duration = rows[1]
-
-    stock_data = []
-
-    for stock in stock_list:
-
-        success, historical_data = await get_historical_data_df(candle_size, duration, stock)
-
-        if not success:
-            return text("Something Went Wrong :( \nRefer to the below message\n" + str(historical_data))
-
-        await add_stock(stock)
-
-        print(historical_data['ma'])
-        stock_data.append(historical_data)
-
-    return await render(
-        template,
-        context={
-            "stock_data": stock_data,
-            "preferences": [candle_size, duration],
-            "previous_stocks": previous_stocks
-        },
-        status=200
-    )
-
-
-async def calculate_rsi(prices, period=14):
-    delta = prices.diff().dropna()
-    gains = delta.where(delta > 0, 0)
-    losses = -delta.where(delta < 0, 0)
-    avg_gains = gains.rolling(window=period, min_periods=1).mean()
-    avg_losses = losses.rolling(window=period, min_periods=1).mean()
-    rs = avg_gains / avg_losses
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-
-async def get_historical_data_df(candle_size, duration, stock):
-    candle_size_prefix, candle_size_suffix = break_string(candle_size)
-
-    function_type = period_function_mapping.get(candle_size_suffix, "TIME_SERIES_DAILY")
-    symbol = stock
-    interval = candle_size
-    url = URL.format(function_type, symbol, interval, ALPHA_VANTAGE_API_KEY)
-
-    try:
-        res = await make_request(url)
-    except Exception as e:
-        return False, str(e)
-
-    time_series_data = None
-
-    for key in list(res.keys()):
-        if "Time Series" in key:
-            time_series_data = res[key]
-
-    if time_series_data is None:
-        message = str(res)
-        print(message)
-        return False, message
-
-    data = res[list(res.keys())[1]]
-    data_df = pd.DataFrame(data).T
-
-    today_date = datetime.datetime.now().date()
-    duration_prefix, duration_suffix = break_string(duration)
-    final_date = today_date
-    if duration_suffix == 'Y':
-        final_date -= relativedelta(years=1)
-    else:
-        final_date -= relativedelta(months=int(duration_prefix))
-
-    start_date = final_date.strftime('%Y-%m-%d')
-    end_date = today_date.strftime('%Y-%m-%d')
-    data_df['4. close'] = data_df['4. close'].astype(float)
-
-    data_df = data_df[::-1]
-    data_df['MA'] = data_df['4. close'].rolling(window=7, min_periods=1).mean()
-    data_df['RSI'] = await calculate_rsi(data_df['4. close'])
-    data_df['RSI'] = data_df['RSI'].fillna(0)
-    data_df['MA'] = data_df['MA'].fillna(0)
-
-    data_df = data_df.loc[(data_df.index >= start_date) & (data_df.index <= end_date)]
-    min_close = data_df['4. close'].min()
-    max_close = data_df['4. close'].max()
-    avg_close = data_df['4. close'].mean()
-
-    stock_data = {
-        "symbol": stock,
-        "labels": data_df.index.tolist(),
-        "closing": data_df['4. close'].tolist(),
-        "min": float(min_close),
-        "max": float(max_close),
-        "average": float(avg_close),
-        "ma": data_df['MA'].tolist(),
-        "rsi": data_df['RSI'].tolist()
-    }
-    return True, stock_data
