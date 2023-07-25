@@ -1,2 +1,2 @@
-aiohttp-cache.sqlite
-.env
+/aiohttp-cache.sqlite
+/.env
