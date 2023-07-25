@@ -142,7 +142,7 @@ async def get_historical_data(candle_size, duration, stock):
     return True, stock_data
 
 
-async def historical_analysis_manager(request, stock_list, template, post=True):
+async def analysis_manager(request, stock_list, template, post=True):
     previous_stocks = await read_stock()
 
     candle_size = None
@@ -221,11 +221,12 @@ async def get_historical_data_df(candle_size, duration, stock):
     data_df = pd.DataFrame(data).T
 
     today_date = datetime.datetime.now().date()
-    num, chars = break_string(duration)
-    if chars == 'Y':
-        final_date = today_date + relativedelta(year=-1)
+    duration_prefix, duration_suffix = break_string(duration)
+    final_date = today_date
+    if duration_suffix == 'Y':
+        final_date -= relativedelta(years=1)
     else:
-        final_date = today_date + relativedelta(months=-(int(num)))
+        final_date -= relativedelta(months=int(duration_prefix))
 
     start_date = final_date.strftime('%Y-%m-%d')
     end_date = today_date.strftime('%Y-%m-%d')
