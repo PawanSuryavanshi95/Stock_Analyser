@@ -45,6 +45,11 @@
     var options = {
         showPoint: false,
         lineSmooth: false,
+        axisX: {
+            labelInterpolationFnc: function(value, index) {
+              return index % 10 === 0 ? value : null;
+            }
+        }
     };
     var data = {
         labels: stock_data[0].labels,
