@@ -4,6 +4,7 @@ from sanic_ext import render
 
 from managers.stocks import read_stock, add_stock, remove_stock, update_preferences, get_preferences
 from managers.analyse import analysis_manager
+from common import ALPHA_VANTAGE_API_KEY
 
 analyse = Blueprint('analyse', version=1, url_prefix="/analyse")
 
@@ -50,5 +51,5 @@ async def compare_post(request, stocks):
 @analyse.get("/real-time/<stock>")
 async def real_time(request, stock):
     return await render(
-        "real_time_data.html", context={"data": {"stock": stock}}, status=200
+        "real_time_data.html", context={"data": {"stock": stock, "API_KEY": ALPHA_VANTAGE_API_KEY}}, status=200
     )
