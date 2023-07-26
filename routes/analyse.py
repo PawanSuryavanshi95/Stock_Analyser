@@ -15,12 +15,7 @@ async def show(request):
 
 @analyse.get("/historical-analysis/<stock>")
 async def historical_analysis_get(request, stock):
-    return await analysis_manager(request, [stock], "historical_data.html", False)
-
-
-@analyse.post("/historical-analysis/<stock>")
-async def historical_analysis_post(request, stock):
-    return await analysis_manager(request, [stock], "historical_data.html")
+    return await analysis_manager([stock], "historical_data.html")
 
 
 @analyse.get("/compare/<stocks>")
@@ -29,16 +24,27 @@ async def compare_get(request, stocks):
     if len(stock_list) != 2:
         return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
 
-    return await analysis_manager(request, stock_list, "comparison.html", False)
+    return await analysis_manager(stock_list, "comparison.html")
 
+@analyse.post("/historical-analysis/<stock>")
+async def historical_analysis_post(request, stock):
+
+    candle_size = request.form.get('candle_size_dropdown')
+    duration = request.form.get('duration_dropdown')
+
+    return await analysis_manager([stock], "historical_data.html", candle_size, duration)
 
 @analyse.post("/compare/<stocks>")
 async def compare_post(request, stocks):
+
+    candle_size = request.form.get('candle_size_dropdown')
+    duration = request.form.get('duration_dropdown')
+
     stock_list = stocks.split("&")
     if len(stock_list) != 2:
         return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
 
-    return await analysis_manager(request, stock_list, "comparison.html")
+    return await analysis_manager(stock_list, "comparison.html", candle_size, duration)
 
 
 @analyse.get("/real-time/<stock>")

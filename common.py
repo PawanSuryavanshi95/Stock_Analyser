@@ -15,4 +15,4 @@ PREFERENCES_FILE_PATH = "db/preferences.csv"
 
 URL = "https://www.alphavantage.co/query?function={}&symbol={}&interval={}&apikey={}"
 
-ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY4")

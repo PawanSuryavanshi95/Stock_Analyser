@@ -3,7 +3,6 @@ import asyncio
 import aiohttp
 import re
 
-
 def break_string(x):
     pattern = r'(\d+)(\D+)'
     matches = re.match(pattern, x)
@@ -11,10 +10,6 @@ def break_string(x):
     characters = matches.group(2)
 
     return number, characters
-
-async def remove_cache_for_url(url):
-    async with CachedSession(cache=SQLiteBackend()) as session:
-        session.delete(url)
 
 async def make_request(url):
     async with CachedSession(cache=SQLiteBackend()) as session:
