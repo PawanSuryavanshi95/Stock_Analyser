@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 
 from managers.parser import Parser
+from managers.validator import Validator
 from utils import break_string, make_request
 from common import *
 from models.stock import Stock
@@ -22,6 +23,7 @@ class API:
     twelve_data_headers = {}
 
     parser = None
+    validator = None
 
     def __init__(self):
         self.alpha_vantage_url = ALPHA_VANTAGE_URL
@@ -33,8 +35,10 @@ class API:
         }
 
         self.parser = Parser()
+        self.validator = Validator()
     
     def __select_api(self):
+        # Check performance then send service to be used
         return Services.TWELVE_DATA
     
     def __create_params_alpha_vantage(self, candle_size, stock):
@@ -75,7 +79,6 @@ class API:
         match service:
 
             case Services.ALPHA_VANTAGE:
-                query_params = self.__create_params_twelve_data(candle_size, stock)
                 query_params = self.__create_params_alpha_vantage(candle_size, stock)
                 url = self.alpha_vantage_url
 
@@ -104,12 +107,16 @@ class API:
         match service:
 
             case Services.ALPHA_VANTAGE:
-                # Validate Reponse
+                val_res = self.validator.validate_alpha_vantage_response(res)
+                if not val_res['success']:
+                    return val_res
                 data = self.parser.parse_alpha_vantage_response(res)
                 stock_instance = Stock.create_instance_from_alpha_vantage(data, stock)
 
             case Services.TWELVE_DATA:
-                # Validate Reponse
+                val_res = self.validator.validate_twelve_data_response(res)
+                if not val_res['success']:
+                    return val_res
                 data = self.parser.parse_twelve_data_response(res)
                 stock_instance = Stock.create_instance_from_twelve_data(data, stock)
             
