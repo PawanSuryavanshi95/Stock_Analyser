@@ -1,66 +1,83 @@
 from utils import *
 from managers.stocks import read_stock, add_stock, remove_stock, update_preferences, get_preferences
 from models.response import Response
-from models.request import Request
+from managers.api import API
 
-response = Response()
-request = Request()
+from models.stock import Stock
 
-async def analysis_manager(stock_list, template, candle_size = None, duration = None):
-    previous_stocks = await read_stock()
+class Analysis:
 
-    if candle_size == None or duration == None:
-        rows = await get_preferences()
-        candle_size = rows[0]
-        duration = rows[1]
-    else:
-        await update_preferences(candle_size, duration)
+    response = None
+    api = None
 
-    stock_data = []
+    def __init__(self):
+        self.response = Response()
+        self.api = API()
 
-    for stock in stock_list:
+    async def __analyse(self, stock_list, template, candle_size = None, duration = None):
+        previous_stocks = await read_stock()
 
-        output = await get_historical_data(candle_size, duration, stock)
+        if candle_size == None or duration == None:
+            rows = await get_preferences()
+            candle_size = rows[0]
+            duration = rows[1]
+        else:
+            await update_preferences(candle_size, duration)
 
-        if not output['success']:
-            msg = str(output['error'])
-            return response.text_response(msg)
+        stock_data = []
 
-        await add_stock(stock)
-        stock_data.append(output['historical_data'])
+        for stock in stock_list:
 
-    context = {
-        "stock_data": stock_data,
-        "preferences": [candle_size, duration],
-        "previous_stocks": previous_stocks
-    }
+            output = await self.__get_historical_data(candle_size, duration, stock)
 
-    return await response.render_response(template, context)
+            if not output['success']:
+                msg = str(output['error'])
+                return self.response.text_response(msg)
 
-async def get_historical_data(candle_size, duration, stock):
-    
-    res = await request.make_get_request(candle_size, stock)
+            await add_stock(stock)
+            stock_data.append(output['historical_data'])
 
-    if not res['success']:
-        return response.text_response(res['error'])
-    
-    time_series_data = None
-
-    for key in list(res['data'].keys()):
-        if "Time Series" in key:
-            time_series_data = res['data'][key]
-
-    if time_series_data is None:
-        message = str(res['data'])
-        print(message)
-        return {
-            'success': False,
-            'error': message
+        context = {
+            "stock_data": stock_data,
+            "preferences": [candle_size, duration],
+            "previous_stocks": previous_stocks
         }
+
+        return await self.response.render_response(template, context)
+
+    async def __get_historical_data(self, candle_size, duration, stock):
+        
+        res = await self.api.fetch_stock_data(candle_size, stock)
+
+        if not res['success']:
+            return res
+        
+        stock_instance = res['stock_instance']
+        old_date = get_old_date(duration)
+
+        historical_data = prepare_historical_data(stock=stock_instance, old_date=old_date)
+        
+        return {
+            "success": True,
+            "historical_data": historical_data,
+        }
+
+    async def historical_data(self, request, stock):
+        # validate stock
+
+        candle_size = request.args.get('candle_size_dropdown')
+        duration = request.args.get('duration_dropdown')
+
+        return await self.__analyse([stock], "historical_data.html", candle_size, duration)
     
-    historical_data = parse_time_series(time_series_data, duration, stock)
-    
-    return {
-        "success": True,
-        "historical_data": historical_data,
-    }
+    async def comparison(self, request, stocks):
+        # validate stock
+
+        stock_list = stocks.split("&")
+        if len(stock_list) != 2:
+            return self.response.text_response("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
+
+        candle_size = request.args.get('candle_size_dropdown')
+        duration = request.args.get('duration_dropdown')
+
+        return await self.__analyse(stock_list, "comparison.html", candle_size, duration)

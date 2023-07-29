@@ -45,7 +45,7 @@
         data = data.replace(/'/g, '"');
         data = JSON.parse(data);
         async function get_new_data() {
-            var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + data.stock + '&apikey=HPW3V08L6PT7390N';
+            var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + data.stock + '&apikey=' + data.api_key;
             const options = {
                 method: 'GET'
             };

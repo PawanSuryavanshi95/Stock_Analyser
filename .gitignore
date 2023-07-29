@@ -1,2 +1,3 @@
 /aiohttp-cache.sqlite
 /.env
+/test.py

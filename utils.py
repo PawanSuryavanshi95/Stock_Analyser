@@ -6,6 +6,8 @@ import pandas as pd
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from models.stock import Stock, Candle
+
 def break_string(x):
     pattern = r'(\d+)(\D+)'
     matches = re.match(pattern, x)
@@ -165,3 +167,89 @@ def calculate_rsi(prices, period=14):
     rs = avg_gains / avg_losses
     rsi = 100 - (100 / (1 + rs))
     return rsi
+
+def check_date(candle: Candle, old_date):
+    return candle.label > old_date
+
+def get_old_date(duration: str):
+    today_date = datetime.datetime.now().date()
+
+    duration_prefix, duration_suffix = break_string(duration)
+
+    old_date = today_date
+    if duration_suffix == 'Y':
+        old_date -= relativedelta(years=1)
+    else:
+        old_date -= relativedelta(months=int(duration_prefix))
+
+    return old_date
+
+def prepare_historical_data(stock: Stock, old_date: datetime.date):
+
+    filtered_candles = list(filter(lambda candle: check_date(candle, old_date), stock.candles))
+
+    gain = 0
+    loss = 0
+    rsi_window = []
+    rsi = []
+    prev = 0
+
+    ma = []
+    ma_window = []
+    sum = 0
+    
+    labels = []
+    closing = []
+
+    for index, candle in enumerate(filtered_candles):
+
+        close = candle.close
+
+        sum += close
+        ma_window.append(close)
+
+        if len(ma_window) >= 7:
+            ma.append(sum / 7)
+            sum -= ma_window[0]
+            ma_window.pop(0)
+
+        if index > 0:
+            change = 100 * (close - prev) / prev
+            rsi_window.append(change)
+            if change >= 0:
+                gain += change
+            else:
+                loss -= change
+            if len(rsi_window) >= 14:
+                if rsi_window[0] >= 0:
+                    gain -= rsi_window[0]
+                else:
+                    loss += rsi_window[0]
+
+                rsi_window.pop(0)
+                rs = gain / loss
+                rsi.append(100 * (1 - (1 / (1 + rs))))
+        prev = close
+
+        labels.append(candle.label.strftime("%Y-%m-%d"))
+        closing.append(close)
+
+    for i in rsi_window:
+        rsi.append(0)
+
+    j = len(ma_window)
+    for i in ma_window:
+        ma.append(sum / j)
+        sum -= i
+        j -= 1
+
+    return {
+        "symbol": stock.name,
+        "labels": list(reversed(labels)),
+        "closing": list(reversed(closing)),
+        "min": 0,
+        "max": 0,
+        "average": 0,
+        "rsi": list(reversed(rsi)),
+        "ma": list(reversed(ma))
+    }
