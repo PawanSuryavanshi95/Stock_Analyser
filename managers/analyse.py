@@ -1,9 +1,7 @@
 from utils import *
 from managers.stocks import read_stock, add_stock, remove_stock, update_preferences, get_preferences
-from models.response import Response
+from handlers import Response
 from managers.api import API
-
-from models.stock import Stock
 
 class Analysis:
 
@@ -32,7 +30,7 @@ class Analysis:
 
             if not output['success']:
                 msg = str(output['error'])
-                return self.response.text_response(msg)
+                return self.response.json_response(output, output['status'])
 
             await add_stock(stock)
             stock_data.append(output['historical_data'])
@@ -63,15 +61,16 @@ class Analysis:
         }
 
     async def historical_data(self, request, stock):
-        # validate stock
 
         candle_size = request.args.get('candle_size_dropdown')
         duration = request.args.get('duration_dropdown')
 
+        working_services = request.app.ctx.working_services
+        self.api.set_working_services(working_services)
+
         return await self.__analyse([stock], "historical_data.html", candle_size, duration)
     
     async def comparison(self, request, stocks):
-        # validate stock
 
         stock_list = stocks.split("&")
         if len(stock_list) != 2:
@@ -79,5 +78,8 @@ class Analysis:
 
         candle_size = request.args.get('candle_size_dropdown')
         duration = request.args.get('duration_dropdown')
+
+        working_services = request.app.ctx.working_services
+        self.api.set_working_services(working_services)
 
         return await self.__analyse(stock_list, "comparison.html", candle_size, duration)

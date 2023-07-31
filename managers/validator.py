@@ -1,4 +1,8 @@
+from managers.api import Services
+
 class Validator:
+
+    msg = "Third Part API ({}) Gave Invalid Response - {}"
     
     def __init__(self):
         pass
@@ -8,13 +12,15 @@ class Validator:
         if res.get('Note', None) is not None:
             return {
                 'success': False,
-                'error': res.get('Note')
+                'status': 500,
+                'error': self.msg.format(Services.ALPHA_VANTAGE, res.get('Note'))
             }
         
         if res.get('Error Message', None) is not None:
             return {
                 'success': False,
-                'error': res.get('Error Message')
+                'status': 500,
+                'error': self.msg.format(Services.ALPHA_VANTAGE, res.get('Error Message'))
             }
 
         return {
@@ -28,12 +34,14 @@ class Validator:
         if status == 'error':
             return {
                 'success': False,
-                'error': res.get('message', 'No Error Message')
+                'status': 500,
+                'error': self.msg.format(Services.TWELVE_DATA, res.get('message'))
             }
         elif status is None:
             return {
                 'success': False,
-                'error': "'status' was not found in the Twelve Data response"
+                'status': 500,
+                'error': self.msg.format(Services.TWELVE_DATA, "'status' was not found in the Twelve Data response")
             }
         
 

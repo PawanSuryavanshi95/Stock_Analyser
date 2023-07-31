@@ -19,11 +19,7 @@ async def historical_analysis_get(request, stock):
 
 @analyse.get("/compare/<stocks>")
 async def compare_get(request, stocks):
-    stock_list = stocks.split("&")
-    if len(stock_list) != 2:
-        return text("Invalid format of stocks passed. Please pass <stock_1>&<stock_2> after 'compare' route.")
-
-    return await analysis_manager.analyse(stock_list, "comparison.html")
+    return await analysis_manager.comparison(request, stocks)
 
 @analyse.get("/real-time/<stock>")
 async def real_time(request, stock):

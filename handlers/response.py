@@ -10,8 +10,8 @@ class Response:
     def text_response(self, content):
         return text(content)
     
-    def json_response_failed(self, data):
-        return json({"data": data})
+    def json_response(self, data, status):
+        return json({"response": data, 'status':status}, status=status)
     
     async def render_response(self, template, context):
         return await render(
